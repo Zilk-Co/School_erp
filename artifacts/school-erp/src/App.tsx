@@ -100,7 +100,7 @@ function PageHead({ eyebrow, title, subtitle, action }: { eyebrow: string; title
 }
 
 function Dashboard() {
-  const schoolName = JSON.parse(localStorage.getItem('erp-prefs') || '{}').schoolName || 'School';
+  const [schoolName, setSchoolName] = useState('School'); useEffect(() => { setupRequest('/setup').then((d: any) => setSchoolName(d.school.name)).catch(() => {}); }, []);
   const summaryQuery = useGetDashboardSummary();
   const activityQuery = useGetActivity();
   const summary = summaryQuery.data;
