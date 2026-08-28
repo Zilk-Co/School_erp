@@ -1,0 +1,593 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: dashboard
+    description: Dashboard summaries and recent activity
+  - name: students
+    description: Student records and admissions
+  - name: employees
+    description: HR records and attendance
+  - name: finance
+    description: Invoicing, receipts, and accounting
+  - name: admissions
+    description: Admission inquiries and enrollment
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /activity:
+    get:
+      operationId: getActivity
+      tags: [dashboard]
+      summary: Get recent activity
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+  /students:
+    get:
+      operationId: listStudents
+      tags: [students]
+      summary: List students
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Students
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Student"
+    post:
+      operationId: createStudent
+      tags: [students]
+      summary: Create student
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentInput"
+      responses:
+        "201":
+          description: Created student
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+  /students/{studentId}:
+    get:
+      operationId: getStudent
+      tags: [students]
+      summary: Get student
+      parameters:
+        - $ref: "#/components/parameters/StudentId"
+      responses:
+        "200":
+          description: Student
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+        "404":
+          description: Student not found
+    patch:
+      operationId: updateStudent
+      tags: [students]
+      summary: Update student
+      parameters:
+        - $ref: "#/components/parameters/StudentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentUpdate"
+      responses:
+        "200":
+          description: Updated student
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+  /employees:
+    get:
+      operationId: listEmployees
+      tags: [employees]
+      summary: List employees
+      responses:
+        "200":
+          description: Employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Employee"
+    post:
+      operationId: createEmployee
+      tags: [employees]
+      summary: Create employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeInput"
+      responses:
+        "201":
+          description: Created employee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+  /invoices:
+    get:
+      operationId: listInvoices
+      tags: [finance]
+      summary: List invoices
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invoice"
+  /admissions/context:
+    get:
+      operationId: getAdmissionsContext
+      tags: [admissions]
+      summary: Get classes, sessions, and fee heads for admissions
+      responses:
+        "200":
+          description: Admissions setup
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdmissionsContext"
+  /inquiries:
+    get:
+      operationId: listInquiries
+      tags: [admissions]
+      summary: List admission inquiries
+      responses:
+        "200":
+          description: Admission inquiries
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Inquiry" }
+    post:
+      operationId: createInquiry
+      tags: [admissions]
+      summary: Create an admission inquiry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InquiryInput" }
+      responses:
+        "201":
+          description: Created inquiry
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Inquiry" }
+  /inquiries/{inquiryId}:
+    get:
+      operationId: getInquiry
+      tags: [admissions]
+      summary: Get an inquiry with fees and invoices
+      parameters:
+        - $ref: "#/components/parameters/InquiryId"
+      responses:
+        "200":
+          description: Inquiry detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Inquiry" }
+    delete:
+      operationId: deleteInquiry
+      tags: [admissions]
+      summary: Delete an inquiry without touching unrelated records
+      parameters:
+        - $ref: "#/components/parameters/InquiryId"
+      responses:
+        "204": { description: Inquiry deleted }
+  /inquiries/{inquiryId}/fees:
+    patch:
+      operationId: updateInquiryFees
+      tags: [admissions]
+      summary: Update selected inquiry fees and manual amounts
+      parameters:
+        - $ref: "#/components/parameters/InquiryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InquiryFeesInput" }
+      responses:
+        "200":
+          description: Updated inquiry
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Inquiry" }
+  /inquiries/{inquiryId}/invoice:
+    post:
+      operationId: generateInquiryInvoice
+      tags: [admissions]
+      summary: Generate an admission invoice
+      parameters:
+        - $ref: "#/components/parameters/InquiryId"
+      responses:
+        "201":
+          description: Generated invoice
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InquiryInvoice" }
+  /inquiries/{inquiryId}/enroll:
+    post:
+      operationId: enrollInquiry
+      tags: [admissions]
+      summary: Enroll a fully paid inquiry as a student
+      parameters:
+        - $ref: "#/components/parameters/InquiryId"
+      responses:
+        "201":
+          description: Enrolled student
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EnrollmentResult" }
+  /payments:
+    post:
+      operationId: recordPayment
+      tags: [finance]
+      summary: Record invoice payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInput"
+      responses:
+        "201":
+          description: Payment recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+  /journal-entries:
+    post:
+      operationId: createJournalEntry
+      tags: [finance]
+      summary: Create balanced journal entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JournalEntryInput"
+      responses:
+        "201":
+          description: Journal entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntry"
+components:
+  parameters:
+    StudentId:
+      name: studentId
+      in: path
+      required: true
+      schema:
+        type: number
+    InquiryId:
+      name: inquiryId
+      in: path
+      required: true
+      schema: { type: number }
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    DashboardSummary:
+      type: object
+      required: [students, employees, outstanding, collectedThisMonth, attendanceRate, enrollmentTrend]
+      properties:
+        students: { type: number }
+        employees: { type: number }
+        outstanding: { type: number }
+        collectedThisMonth: { type: number }
+        attendanceRate: { type: number }
+        enrollmentTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendPoint"
+    TrendPoint:
+      type: object
+      required: [label, value]
+      properties:
+        label: { type: string }
+        value: { type: number }
+    ActivityItem:
+      type: object
+      required: [id, title, description, time, type]
+      properties:
+        id: { type: number }
+        title: { type: string }
+        description: { type: string }
+        time: { type: string }
+        type: { type: string }
+    Student:
+      type: object
+      required: [id, admissionNo, name, className, section, guardian, phone, status, joined]
+      properties:
+        id: { type: number }
+        admissionNo: { type: string }
+        name: { type: string }
+        className: { type: string }
+        section: { type: string }
+        guardian: { type: string }
+        phone: { type: string }
+        status: { type: string }
+        joined: { type: string }
+    StudentInput:
+      type: object
+      required: [name, className, section, guardian, phone]
+      properties:
+        name: { type: string }
+        className: { type: string }
+        section: { type: string }
+        guardian: { type: string }
+        phone: { type: string }
+    StudentUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        className: { type: string }
+        section: { type: string }
+        guardian: { type: string }
+        phone: { type: string }
+        status: { type: string }
+    Employee:
+      type: object
+      required: [id, name, designation, department, phone, attendance, status]
+      properties:
+        id: { type: number }
+        name: { type: string }
+        designation: { type: string }
+        department: { type: string }
+        phone: { type: string }
+        attendance: { type: number }
+        status: { type: string }
+    EmployeeInput:
+      type: object
+      required: [name, designation, department, phone]
+      properties:
+        name: { type: string }
+        designation: { type: string }
+        department: { type: string }
+        phone: { type: string }
+    Invoice:
+      type: object
+      required: [id, invoiceNo, student, category, amount, dueDate, status]
+      properties:
+        id: { type: number }
+        invoiceNo: { type: string }
+        student: { type: string }
+        category: { type: string }
+        amount: { type: number }
+        dueDate: { type: string }
+        status: { type: string }
+    PaymentInput:
+      type: object
+      required: [invoiceId, amount, method, paidAt]
+      properties:
+        invoiceId: { type: number }
+        amount: { type: number }
+        method: { type: string }
+        paidAt: { type: string }
+    Payment:
+      type: object
+      required: [id, invoiceId, amount, method, paidAt]
+      properties:
+        id: { type: number }
+        invoiceId: { type: number }
+        amount: { type: number }
+        method: { type: string }
+        paidAt: { type: string }
+    JournalEntryInput:
+      type: object
+      required: [date, description, lines]
+      properties:
+        date: { type: string }
+        description: { type: string }
+        lines:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/JournalLineInput"
+    JournalLineInput:
+      type: object
+      required: [account, debit, credit]
+      properties:
+        account: { type: string }
+        debit: { type: number }
+        credit: { type: number }
+    JournalEntry:
+      type: object
+      required: [id, date, description, totalDebit, totalCredit]
+      properties:
+        id: { type: number }
+        date: { type: string }
+        description: { type: string }
+        totalDebit: { type: number }
+        totalCredit: { type: number }
+    AdmissionsContext:
+      type: object
+      required: [classes, sections, sessions, feeHeads]
+      properties:
+        classes: { type: array, items: { $ref: "#/components/schemas/ClassOption" } }
+        sections: { type: array, items: { $ref: "#/components/schemas/SectionOption" } }
+        sessions: { type: array, items: { $ref: "#/components/schemas/SessionOption" } }
+        feeHeads: { type: array, items: { $ref: "#/components/schemas/FeeHeadOption" } }
+    ClassOption:
+      type: object
+      required: [id, name]
+      properties: { id: { type: number }, name: { type: string } }
+    SectionOption:
+      type: object
+      required: [id, classId, name]
+      properties: { id: { type: number }, classId: { type: number }, name: { type: string } }
+    SessionOption:
+      type: object
+      required: [id, name, startDate, endDate, isActive]
+      properties:
+        id: { type: number }
+        name: { type: string }
+        startDate: { type: string }
+        endDate: { type: string }
+        isActive: { type: boolean }
+    FeeHeadOption:
+      type: object
+      required: [id, name, amount]
+      properties: { id: { type: number }, name: { type: string }, amount: { type: number } }
+    InquiryFee:
+      type: object
+      required: [id, feeHeadId, feeHead, amount]
+      properties: { id: { type: number }, feeHeadId: { type: number }, feeHead: { type: string }, amount: { type: number } }
+    InquiryInvoice:
+      type: object
+      required: [id, invoiceNo, category, amount, balance]
+      properties:
+        id: { type: number }
+        invoiceNo: { type: string }
+        category: { type: string }
+        amount: { type: number }
+        balance: { type: number }
+        status: { type: string }
+    Inquiry:
+      type: object
+      required: [id, inquiryNo, studentName, classId, sessionId, fatherFullName, status, fees, invoices, total, paid, balance]
+      properties:
+        id: { type: number }
+        inquiryNo: { type: string }
+        studentName: { type: string }
+        dateOfBirth: { type: string, nullable: true }
+        gender: { type: string, nullable: true }
+        previousSchool: { type: string, nullable: true }
+        classId: { type: number }
+        sessionId: { type: number }
+        className: { type: string }
+        sessionName: { type: string }
+        fatherFullName: { type: string }
+        fatherCnic: { type: string, nullable: true }
+        fatherDesignation: { type: string, nullable: true }
+        fatherPhone: { type: string, nullable: true }
+        motherFullName: { type: string, nullable: true }
+        motherCnic: { type: string, nullable: true }
+        motherDesignation: { type: string, nullable: true }
+        motherPhone: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+        status: { type: string }
+        fees: { type: array, items: { $ref: "#/components/schemas/InquiryFee" } }
+        invoices: { type: array, items: { $ref: "#/components/schemas/InquiryInvoice" } }
+        total: { type: number }
+        paid: { type: number }
+        balance: { type: number }
+    InquiryInput:
+      type: object
+      required: [studentName, classId, sessionId, fatherFullName]
+      properties:
+        studentName: { type: string }
+        dateOfBirth: { type: string }
+        gender: { type: string }
+        previousSchool: { type: string }
+        classId: { type: number }
+        sessionId: { type: number }
+        fatherFullName: { type: string }
+        fatherCnic: { type: string }
+        fatherDesignation: { type: string }
+        fatherPhone: { type: string }
+        motherFullName: { type: string }
+        motherCnic: { type: string }
+        motherDesignation: { type: string }
+        motherPhone: { type: string }
+        address: { type: string }
+        notes: { type: string }
+    InquiryFeesInput:
+      type: object
+      required: [fees]
+      properties:
+        fees:
+          type: array
+          items:
+            type: object
+            required: [feeHeadId, amount]
+            properties: { feeHeadId: { type: number }, amount: { type: number } }
+    EnrollmentResult:
+      type: object
+      required: [id, admissionNo, studentName, status]
+      properties: { id: { type: number }, admissionNo: { type: string }, studentName: { type: string }, status: { type: string } }
+
