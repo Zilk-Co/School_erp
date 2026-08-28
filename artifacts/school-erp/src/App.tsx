@@ -108,7 +108,7 @@ function Dashboard() {
   const maxTrend = Math.max(...trend.map((point) => point.value), 1);
   const attendance = summary?.attendanceRate;
   return <div className="content">
-    <PageHead eyebrow="Tuesday, 18 June 2024" title="Good morning, Rhea." subtitle="Here’s the operating picture for Alder Finch Academy." />
+    <PageHead eyebrow={new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} title="Good morning, Rhea." subtitle="Here’s the operating picture for Alder Finch Academy." />
     {summaryQuery.isLoading ? <LoadingCards /> : summaryQuery.isError ? <ErrorState onRetry={() => summaryQuery.refetch()} /> : <div className="grid metric-grid">
       {[['Enrolled students', summary ? String(summary.students) : '—', 'Current roster', GraduationCap],
         ['Employees', summary ? String(summary.employees) : '—', 'Active directory', UsersRound],
