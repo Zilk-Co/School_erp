@@ -100,6 +100,7 @@ function PageHead({ eyebrow, title, subtitle, action }: { eyebrow: string; title
 }
 
 function Dashboard() {
+  const schoolName = JSON.parse(localStorage.getItem('erp-prefs') || '{}').schoolName || 'School';
   const summaryQuery = useGetDashboardSummary();
   const activityQuery = useGetActivity();
   const summary = summaryQuery.data;
